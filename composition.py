@@ -4,7 +4,7 @@ import argparse
 import re
 from pipeline_config import ASR_OUTPUT_DIR, COMP_OUTPUT_DIR
 from pipeline_config import PUNCTUATION_ENDINGS, CONJUNCTIONS, MAX_WORDS
-from pipeline_config import MODES, DEFAULT_MODE
+from pipeline_config import MODES, DEFAULT_MODE, REMOVE_PUNCTUATION
 
 def clean_text(text):
     return re.sub(r"[.,:!?\'\"]", "", text)
@@ -38,7 +38,7 @@ def split_sentence_by_heuristic(words, max_words=MAX_WORDS):
     return chunks
 
 
-def process_flat_segments(data, video_path, mode=DEFAULT_MODE):
+def process_segments(data, video_path, mode=DEFAULT_MODE):
     all_words = []
     full_text = ""
 
@@ -99,7 +99,7 @@ def process_flat_segments(data, video_path, mode=DEFAULT_MODE):
     }
 
 
-def composition_stage(mode="heuristic"):
+def composition_stage():
     os.makedirs(COMP_OUTPUT_DIR, exist_ok=True)
 
     asr_files = [f for f in os.listdir(ASR_OUTPUT_DIR) if f.endswith(".json")]
@@ -119,28 +119,21 @@ def composition_stage(mode="heuristic"):
 
         print(f"Processing: {video_name} ({i + 1}/{total_files})")
 
-        result = process_flat_segments(segments, video_path, mode=mode)
+        result = process_segments(segments, video_path, mode=DEFAULT_MODE)
 
-        if args.remove_punctuation == "true":
+        if REMOVE_PUNCTUATION:
             for segment in result["segments"]:
                 segment["text"] = clean_text(segment["text"])
 
-        output_file = os.path.join(COMP_OUTPUT_DIR, f"composed_{mode}_{file}")
+        output_file = os.path.join(COMP_OUTPUT_DIR, f"composed_{DEFAULT_MODE}_{file}")
 
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=4, ensure_ascii=False)
             
+def run_composition_stage():
+    print("Composition stage started.")
+    composition_stage()
+    print("Composition stage finished.\n")
             
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Perform composition stage on ASR outputs.")
-    parser.add_argument("--mode", choices=MODES, default=DEFAULT_MODE,
-                        help="Choose composition mode: word, sentence, or heuristic (default: heuristic)")
-    
-    parser.add_argument("--remove-punctuation", choices=["true", "false"], default="true",
-                        help="Remove punctuation from the text (default: true)")
-
-    args = parser.parse_args()
-
-    print(f"Composition stage started in '{args.mode}' mode.")
-    composition_stage(mode=args.mode)
-    print("Composition stage finished.\n")
+    run_composition_stage()

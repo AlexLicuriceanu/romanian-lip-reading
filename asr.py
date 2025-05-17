@@ -66,8 +66,11 @@ def asr_stage():
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=4, ensure_ascii=False)
 
-if __name__ == "__main__":
+def run_asr_stage():
     print("ASR stage started.")
     asr_stage()
     print("ASR stage finished.\n")
+
+if __name__ == "__main__":
+    run_asr_stage()
     

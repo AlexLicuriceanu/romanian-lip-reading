@@ -21,7 +21,11 @@ CONJUNCTIONS = {"și", "dar", "iar", "sau", "pentru", "deoarece", "că", "fiindc
 MAX_WORDS = 25  # Maximum number of words in a sentence
 MODES = ["word", "sentence", "heuristic"] # Composition modes
 DEFAULT_MODE = "heuristic" # Default composition mode
+REMOVE_PUNCTUATION = True  # Remove punctuation from the text
 
 # 4. Trimming configuration
 TRIM_OUTPUT_DIR = "./trimmed_outputs/" # Directory to save the trimmed clips
 PADDING = 1.0  # Seconds of padding to add to the start and end of each clip
+
+# 5. ASD configuration
+ASD_OUTPUT_DIR = "./asd_outputs/"  # Directory to save the ASD output files
