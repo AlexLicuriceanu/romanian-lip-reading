@@ -29,3 +29,12 @@ PADDING = 1.0  # Seconds of padding to add to the start and end of each clip
 
 # 5. ASD configuration
 ASD_OUTPUT_DIR = "./asd_outputs/"  # Directory to save the ASD output files
+N_DATA_LOADER_THREAD = 10  # Number of workers
+FACEDET_SCALE = 0.50 # Scale factor for face detection, the frames will be scale to 0.25 orig
+MIN_TRACK = 10 # Number of min frames for each shot
+NUM_FAILED_DET = 10 # Number of missed detections allowed before tracking is stopped
+MIN_FACE_SIZE = 1 # Minimum face size in pixels
+CROP_SCALE = 0.40 # Scale bounding box
+START_TIME = 0 # The start time of the video
+DURATION = 0 # The duration of the video, when set as 0, will extract the whole video
+ASD_DEBUG = False # Debug mode for ASD

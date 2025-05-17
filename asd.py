@@ -1,6 +1,9 @@
 import os
 import json
 from pipeline_config import ASD_OUTPUT_DIR, TRIM_OUTPUT_DIR
+from pipeline_config import N_DATA_LOADER_THREAD, FACEDET_SCALE, MIN_TRACK
+from pipeline_config import NUM_FAILED_DET, MIN_FACE_SIZE, CROP_SCALE
+from pipeline_config import START_TIME, DURATION, ASD_DEBUG
 from talknet_asd.runTalkNet import run_talknet
 
 def asd_stage():
@@ -26,12 +29,23 @@ def asd_stage():
         output_path = os.path.abspath(os.path.join(ASD_OUTPUT_DIR, output_filename))
         
         # Run ASD
-        run_talknet(video_path=trimmed_file_path, output_dir=output_path)
-        break
-
-
-
-if __name__ == "__main__":
+        run_talknet(video_path=trimmed_file_path,
+                    output_dir=output_path,
+                    n_data_loader_thread=N_DATA_LOADER_THREAD,
+                    facedet_scale=FACEDET_SCALE,
+                    min_track=MIN_TRACK,
+                    num_failed_det=NUM_FAILED_DET,
+                    min_face_size=MIN_FACE_SIZE,
+                    crop_scale=CROP_SCALE,
+                    start_time=START_TIME,
+                    duration=DURATION,
+                    debug=ASD_DEBUG,
+        )
+    
+def run_asd_stage():
     print("ASD stage started.")
     asd_stage()
     print("ASD stage finished.\n")
+
+if __name__ == "__main__":
+    run_asd_stage()
