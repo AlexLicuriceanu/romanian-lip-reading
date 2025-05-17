@@ -1,0 +1,8 @@
+/venv/
+/asr_outputs/
+/audio/
+/composed_outputs/
+/TalkNet-ASD/
+/trimmed_outputs/
+/video/
+/WhisperS2T/
