@@ -19,35 +19,27 @@ def trim_stage():
 
         video_name = os.path.splitext(os.path.basename(video_path))[0]
         video_file = os.path.join(VIDEO_DIR, f"{video_name}.mp4")
+         
 
         if not os.path.exists(video_file):
             print(f"Video file not found: {video_file}")
             continue
+
+        video_length = segments[-1]["end"]
 
         video_trim_dir = os.path.join(TRIM_OUTPUT_DIR, video_name)
         os.makedirs(video_trim_dir, exist_ok=True)
 
         print(f"Processing: {video_file} ({i + 1}/{total_files})")
 
-        manifest = {
-            "video_path": video_path,
-            "segments": []
-        }
-
-        for idx, segment in tqdm(enumerate(segments), total=len(segments), desc=f"Trimming"):
-
+        for idx, segment in tqdm(enumerate(segments), total=len(segments), desc="Trimming"):
             start = max(0, segment["start"] - PADDING)
-            end = segment["end"] + PADDING
-
-            if idx == 0:
-                start = segment["start"]
-            elif idx == len(segments) - 1:
-                end = segment["end"]
-
+            end = min(video_length, segment["end"] + PADDING)
             duration = end - start
 
-            out_name = f"{idx+1:06d}_{video_name}.mp4"
+            out_name = f"{idx+1}_{video_name}.mp4"
             out_path = os.path.join(video_trim_dir, out_name)
+            abs_out_path = os.path.abspath(out_path)
 
             cmd = [
                 "ffmpeg",
@@ -63,14 +55,16 @@ def trim_stage():
 
             subprocess.run(cmd)
 
-            manifest["segments"].append({
-                "clip": out_name,
-                "text": segment["text"]
-            })
+            segment["segment_path"] = abs_out_path
 
-        manifest["video_path"] = video_path
+        # Save updated manifest 
+        manifest = {
+            "video_path": video_path,
+            "text": data.get("text", ""),
+            "segments": segments
+        }
 
-        manifest_path = os.path.join(video_trim_dir, f"trimmed_{video_name}.json")
+        manifest_path = os.path.join(TRIM_OUTPUT_DIR, f"{video_name}.json")
         with open(manifest_path, "w", encoding="utf-8") as mf:
             json.dump(manifest, mf, indent=4, ensure_ascii=False)
 

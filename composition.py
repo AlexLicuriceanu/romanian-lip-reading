@@ -1,13 +1,14 @@
 import json
 import os
-import argparse
 import re
 from pipeline_config import ASR_OUTPUT_DIR, COMP_OUTPUT_DIR
 from pipeline_config import PUNCTUATION_ENDINGS, CONJUNCTIONS, MAX_WORDS
 from pipeline_config import MODES, DEFAULT_MODE, REMOVE_PUNCTUATION
 
+
 def clean_text(text):
-    return re.sub(r"[.,:!?\'\"]", "", text)
+    return re.sub(r"[.,:!?\'\"]", "", str.lower(text))
+
 
 def split_sentence_by_heuristic(words, max_words=MAX_WORDS):
     chunks = []
@@ -38,13 +39,9 @@ def split_sentence_by_heuristic(words, max_words=MAX_WORDS):
     return chunks
 
 
-def process_segments(data, video_path, mode=DEFAULT_MODE):
-    all_words = []
-    full_text = ""
-
-    for block in data:
-        full_text += block.get("text", "").strip() + " "
-        all_words.extend(block.get("word_timestamps", []))
+def process_segments(word_timestamps, video_path, mode=DEFAULT_MODE):
+    all_words = word_timestamps
+    full_text = " ".join(w["word"] for w in all_words)
 
     final_segments = []
 
@@ -53,18 +50,17 @@ def process_segments(data, video_path, mode=DEFAULT_MODE):
             final_segments.append({
                 "text": word["word"],
                 "start": word["start"],
-                "end": word["end"]
+                "end": word["end"],
+                "word_timestamps": [word]
             })
 
     else:  # sentence or heuristic
         current_sentence = []
 
         for word in all_words:
-
             current_sentence.append(word)
 
             if any(word["word"].strip().endswith(p) for p in PUNCTUATION_ENDINGS):
-
                 if mode == "heuristic":
                     sub_sentences = split_sentence_by_heuristic(current_sentence)
                 else:
@@ -74,9 +70,10 @@ def process_segments(data, video_path, mode=DEFAULT_MODE):
                     final_segments.append({
                         "text": " ".join(w["word"] for w in chunk).strip(),
                         "start": chunk[0]["start"],
-                        "end": chunk[-1]["end"]
+                        "end": chunk[-1]["end"],
+                        "word_timestamps": chunk
                     })
-                    
+
                 current_sentence = []
 
         if current_sentence:
@@ -89,7 +86,8 @@ def process_segments(data, video_path, mode=DEFAULT_MODE):
                 final_segments.append({
                     "text": " ".join(w["word"] for w in chunk).strip(),
                     "start": chunk[0]["start"],
-                    "end": chunk[-1]["end"]
+                    "end": chunk[-1]["end"],
+                    "word_timestamps": chunk
                 })
 
     return {
@@ -109,11 +107,11 @@ def composition_stage():
         with open(os.path.join(ASR_OUTPUT_DIR, file), "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        if not isinstance(data, dict) or "segments" not in data:
+        if not isinstance(data, dict) or "word_timestamps" not in data:
             print(f"Skipping {file} - invalid format")
             continue
 
-        segments = data["segments"]
+        segments = data["word_timestamps"]
         video_path = data.get("video_path", "unknown_video")
         video_name = os.path.basename(video_path)
 
@@ -124,16 +122,22 @@ def composition_stage():
         if REMOVE_PUNCTUATION:
             for segment in result["segments"]:
                 segment["text"] = clean_text(segment["text"])
+                
+                # Clean words inside word_timestamps too
+                for word in segment.get("word_timestamps", []):
+                    word["word"] = clean_text(word["word"])
 
-        output_file = os.path.join(COMP_OUTPUT_DIR, f"composed_{DEFAULT_MODE}_{file}")
+        output_file = os.path.join(COMP_OUTPUT_DIR, f"{DEFAULT_MODE}_{file}")
 
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(result, f, indent=4, ensure_ascii=False)
-            
+
+
 def run_composition_stage():
     print("Composition stage started.")
     composition_stage()
     print("Composition stage finished.\n")
-            
+
+
 if __name__ == "__main__":
     run_composition_stage()

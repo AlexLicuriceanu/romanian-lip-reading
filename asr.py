@@ -31,38 +31,38 @@ def extract_audio(video_path, audio_path):
     os.system(f"ffmpeg -y -hide_banner -loglevel error -i \"{video_path}\" -ar 16000 -ac 1 -vn \"{audio_path}\"")
 
 def asr_stage():
-
     os.makedirs(AUDIO_DIR, exist_ok=True)
     os.makedirs(ASR_OUTPUT_DIR, exist_ok=True)
 
-    # Extract audio from video files, then run ASR on the audio files
     video_files = [f for f in os.listdir(VIDEO_DIR) if f.endswith(".mp4")]
     total_files = len(video_files)
 
     for i, video_file in enumerate(video_files):
-        video_path = os.path.join(VIDEO_DIR, video_file)
+        video_path = os.path.abspath(os.path.join(VIDEO_DIR, video_file))
         audio_path = os.path.join(AUDIO_DIR, f"{os.path.splitext(video_file)[0]}.wav")
 
         extract_audio(video_path, audio_path)
 
-        # Check if audio extraction was successful
         if not os.path.exists(audio_path):
             print(f"Failed to extract audio for: {video_file}, skipping.")
             continue
 
         print(f"Processing: {video_file} ({i + 1}/{total_files})")
         results = asr([audio_path])
-
         result = results[0]
+
+        # Flatten word_timestamps from all segments
+        all_word_timestamps = []
+        for segment in result:
+            if "word_timestamps" in segment:
+                all_word_timestamps.extend(segment["word_timestamps"])
 
         output = {
             "video_path": video_path,
-            "segments": result
-        } 
+            "word_timestamps": all_word_timestamps
+        }
 
-        # Save results to JSON file
-        output_file = os.path.join(ASR_OUTPUT_DIR, f"asr_{os.path.splitext(video_file)[0]}.json")
-
+        output_file = os.path.join(ASR_OUTPUT_DIR, f"{os.path.splitext(video_file)[0]}.json")
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=4, ensure_ascii=False)
 
