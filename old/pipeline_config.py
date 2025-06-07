@@ -4,15 +4,15 @@ VIDEO_DIR = "./video/"  # Directory containing video files
 # 2. ASR configuration
 AUDIO_DIR = "./audio/"  # Directory containing audio files
 ASR_OUTPUT_DIR = "./asr_outputs/"  # Directory to save the ASR output files
-ASR_MODEL_IDENTIFIER = "large-v2"  # "large-v3" doesn't work with word-level timestamps yet
-ASR_BACKEND = "CTranslate2" # or "CTranslate2", "TensorRT-LLM"
-ASR_COMPUTE_TYPE = "float32"  # or "int8", "float32"
+MODEL_IDENTIFIER = "large-v2"  # "large-v3" doesn't work with word-level timestamps yet
+BACKEND = "CTranslate2" # or "CTranslate2", "TensorRT-LLM"
+COMPUTE_TYPE = "float32"  # or "int8", "float32"
 DEVICE = "cuda"  # or "cpu"
 ASR_OPTIONS = {'word_timestamps': True, 'beam_size': 1}
-ASR_LANG_CODES = ["ro"]
-ASR_TASKS = ["transcribe"]
-ASR_INITIAL_PROMPTS = [None]
-ASR_BATCH_SIZE = 1
+LANG_CODES = ["ro"]
+TASKS = ["transcribe"]
+INITIAL_PROMPTS = [None]
+BATCH_SIZE = 1
 
 # 3. Composition configuration
 COMP_OUTPUT_DIR = "./composed_outputs/"  # Directory to save the composed output files
