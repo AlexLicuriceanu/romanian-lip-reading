@@ -1,9 +1,16 @@
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+import time
+from datetime import datetime, timedelta
 from pipeline_config import *
 from asr import asr_load_model, asr_stage
+from composition import composition_stage
 
 if __name__ == "__main__":
     """Run all the stages of the dataset creation pipeline"""
-    
+    start_time = time.time()
+
     # 1. ASR stage: Load the ASR model
     asr_model = asr_load_model(
         model_identifier=ASR_MODEL_IDENTIFIER,
@@ -21,3 +28,16 @@ if __name__ == "__main__":
         initial_prompts=ASR_INITIAL_PROMPTS,
         batch_size=ASR_BATCH_SIZE
     )
+
+    # 3. Composition stage: Compose the ASR outputs into words or sentences
+    composition_stage(
+        punctuation_endings=COMP_PUNCTUATION_ENDINGS,
+        conjunctions=COMP_CONJUNCTIONS,
+        max_words=COMP_MAX_WORDS,
+        mode=COMP_MODE,
+        remove_punctuation=COMP_REMOVE_PUNCTUATION,
+        max_workers=COMP_MAX_WORKERS
+    )
+
+    end_time = time.time()
+    print(f"Pipeline completed. Time: {timedelta(seconds=end_time - start_time)}")

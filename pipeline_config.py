@@ -1,3 +1,6 @@
+# 0. General configuration for the pipeline
+DEVICE = "cuda"  # or "cpu"
+
 # 1. Downloader configuration
 VIDEO_DIR = "./video/"  # Directory containing video files
 
@@ -7,7 +10,6 @@ ASR_OUTPUT_DIR = "./asr_outputs/"  # Directory to save the ASR output files
 ASR_MODEL_IDENTIFIER = "large-v2"  # "large-v3" doesn't work with word-level timestamps yet
 ASR_BACKEND = "CTranslate2" # or "CTranslate2", "TensorRT-LLM"
 ASR_COMPUTE_TYPE = "float32"  # or "int8", "float32"
-DEVICE = "cuda"  # or "cpu"
 ASR_OPTIONS = {'word_timestamps': True, 'beam_size': 1}
 ASR_LANG_CODES = ["ro"]
 ASR_TASKS = ["transcribe"]
@@ -16,12 +18,12 @@ ASR_BATCH_SIZE = 1
 
 # 3. Composition configuration
 COMP_OUTPUT_DIR = "./composed_outputs/"  # Directory to save the composed output files
-PUNCTUATION_ENDINGS = {".", "!", "?", ":"} # Punctuation that indicates the end of a sentence
-CONJUNCTIONS = {"și", "dar", "iar", "sau", "pentru", "deoarece", "că", "fiindcă", "însă", "decât"} # Sentence split heuristic (most used Romanian conjunctions) 
-MAX_WORDS = 25  # Maximum number of words in a sentence
-MODES = ["word", "sentence", "heuristic"] # Composition modes
-DEFAULT_MODE = "heuristic" # Default composition mode
-REMOVE_PUNCTUATION = True  # Remove punctuation from the text
+COMP_PUNCTUATION_ENDINGS = {".", "!", "?", ":"} # Punctuation that indicates the end of a sentence
+COMP_CONJUNCTIONS = {"și", "dar", "iar", "sau", "pentru", "deoarece", "că", "fiindcă", "însă", "decât"} # Sentence split heuristic (most used Romanian conjunctions) 
+COMP_MAX_WORDS = 25  # Maximum number of words in a sentence
+COMP_MODE = "heuristic" # "word", "sentence", "heuristic"
+COMP_REMOVE_PUNCTUATION = True  # Remove punctuation from the text
+COMP_MAX_WORKERS = 8  # Maximum number of threads for the composition stage
 
 # 4. Trimming configuration
 TRIM_OUTPUT_DIR = "./trimmed_outputs/" # Directory to save the trimmed clips
