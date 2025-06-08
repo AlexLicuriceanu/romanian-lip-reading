@@ -1,6 +1,6 @@
-download
-asr
-compose
+download X 
+asr X
+compose X
 trim
 asd
 crop/label

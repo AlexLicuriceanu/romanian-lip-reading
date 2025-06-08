@@ -22,6 +22,9 @@ if __name__ == "__main__":
 
     # 2. ASR stage: Run ASR on the video files
     asr_stage(
+        video_dir=VIDEO_DIR,
+        audio_dir=AUDIO_DIR,
+        asr_output_dir=ASR_OUTPUT_DIR,
         model=asr_model,
         lang_codes=ASR_LANG_CODES,
         tasks=ASR_TASKS,
@@ -31,6 +34,8 @@ if __name__ == "__main__":
 
     # 3. Composition stage: Compose the ASR outputs into words or sentences
     composition_stage(
+        asr_output_dir=ASR_OUTPUT_DIR,
+        comp_output_dir=COMP_OUTPUT_DIR,
         punctuation_endings=COMP_PUNCTUATION_ENDINGS,
         conjunctions=COMP_CONJUNCTIONS,
         max_words=COMP_MAX_WORDS,

@@ -3,7 +3,6 @@ import os
 import re
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from pipeline_config import ASR_OUTPUT_DIR, COMP_OUTPUT_DIR
 
 def clean_text(text):
     """Sanitize text"""
@@ -102,10 +101,10 @@ def process_segments(word_timestamps, video_path, punctuation_endings, conjuncti
         "segments": final_segments
     }
 
-def process_single_file(file, punctuation_endings, conjunctions, max_words, mode, remove_punctuation):
+def process_single_file(asr_output_dir, comp_output_dir, file, punctuation_endings, conjunctions, max_words, mode, remove_punctuation):
     # Load the ASR manifest
     try:
-        with open(os.path.join(ASR_OUTPUT_DIR, file), "r", encoding="utf-8") as f:
+        with open(os.path.join(asr_output_dir, file), "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
         return None, f"{file} failed to load: {e}"
@@ -138,21 +137,23 @@ def process_single_file(file, punctuation_endings, conjunctions, max_words, mode
             for word in segment.get("word_timestamps", []):
                 word["word"] = clean_text(word["word"])
 
-    output_path = os.path.join(COMP_OUTPUT_DIR, f"{mode}_{file}")
+    output_path = os.path.join(comp_output_dir, f"{mode}_{file}")
     return output_path, output_manifest
 
-def composition_stage(punctuation_endings, conjunctions, max_words, mode, remove_punctuation, max_workers=1):
+def composition_stage(asr_output_dir, comp_output_dir, punctuation_endings, conjunctions, max_words, mode, remove_punctuation, max_workers=1):
     """Composition stage to process ASR outputs and compose segments"""
-    os.makedirs(COMP_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(comp_output_dir, exist_ok=True)
 
     # Get all ASR manifests
-    asr_files = [f for f in os.listdir(ASR_OUTPUT_DIR) if f.endswith(".json")]
+    asr_files = [f for f in os.listdir(asr_output_dir) if f.endswith(".json")]
     total_files = len(asr_files)
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = {
             executor.submit(
                 process_single_file,
+                asr_output_dir,
+                comp_output_dir,
                 file,
                 punctuation_endings,
                 conjunctions,
@@ -177,14 +178,18 @@ def composition_stage(punctuation_endings, conjunctions, max_words, mode, remove
 
 if __name__ == "__main__":
     from pipeline_config import (
+        ASR_OUTPUT_DIR, COMP_OUTPUT_DIR,
         COMP_PUNCTUATION_ENDINGS, COMP_CONJUNCTIONS, COMP_MAX_WORDS,
         COMP_MODE, COMP_REMOVE_PUNCTUATION, COMP_MAX_WORKERS
     )
 
-    composition_stage(punctuation_endings=COMP_PUNCTUATION_ENDINGS,
-                      conjunctions=COMP_CONJUNCTIONS,
-                      max_words=COMP_MAX_WORDS,
-                      mode=COMP_MODE,
-                      remove_punctuation=COMP_REMOVE_PUNCTUATION,
-                      max_workers=COMP_MAX_WORKERS
+    composition_stage(
+        asr_output_dir=ASR_OUTPUT_DIR,
+        comp_output_dir=COMP_OUTPUT_DIR,
+        punctuation_endings=COMP_PUNCTUATION_ENDINGS,
+        conjunctions=COMP_CONJUNCTIONS,
+        max_words=COMP_MAX_WORDS,
+        mode=COMP_MODE,
+        remove_punctuation=COMP_REMOVE_PUNCTUATION,
+        max_workers=COMP_MAX_WORKERS
     )

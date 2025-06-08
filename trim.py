@@ -6,6 +6,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pipeline_config import COMP_OUTPUT_DIR, VIDEO_DIR, TRIM_OUTPUT_DIR, TRIM_PADDING, TRIM_MAX_WORKERS
 
 def process_segment(segment, idx, video_file, video_name, video_length, video_trim_dir):
+    """Trim a single segment from the video file"""
+
+    # Compute start and end times with padding
     start = max(0, segment["start"] - TRIM_PADDING)
     end = min(video_length, segment["end"] + TRIM_PADDING)
     duration = end - start
@@ -26,11 +29,14 @@ def process_segment(segment, idx, video_file, video_name, video_length, video_tr
         out_path
     ]
 
+    # Run the ffmpeg command to trim the segment
     subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     segment["segment_path"] = abs_out_path
+
     return segment
 
 def process_manifest(file):
+    """Process a single manifest file to trim segments from the corresponding video"""
     try:
         with open(os.path.join(COMP_OUTPUT_DIR, file), "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -53,6 +59,7 @@ def process_manifest(file):
 
     # Multithreaded segment trimming
     updated_segments = []
+
     with ThreadPoolExecutor(max_workers=TRIM_MAX_WORKERS) as executor:
         futures = [
             executor.submit(process_segment, segment, idx, video_file, video_name, video_length, video_trim_dir)
@@ -65,23 +72,29 @@ def process_manifest(file):
     # Sort segments to preserve original order
     updated_segments.sort(key=lambda seg: seg["segment_path"])
 
+    # Create the manifest with the segments
     manifest = {
         "video_path": video_path,
         "text": data.get("text", ""),
         "segments": updated_segments
     }
 
+    # Save the manifest to a JSON file
     manifest_path = os.path.join(TRIM_OUTPUT_DIR, f"{video_name}.json")
     with open(manifest_path, "w", encoding="utf-8") as mf:
         json.dump(manifest, mf, indent=4, ensure_ascii=False)
 
 def trim_stage():
+    """Main function to handle the trimming stage of the pipeline"""
+
     os.makedirs(TRIM_OUTPUT_DIR, exist_ok=True)
     manifest_files = [f for f in os.listdir(COMP_OUTPUT_DIR) if f.endswith(".json")]
+    total_files = len(manifest_files)
 
     with ThreadPoolExecutor() as executor:
-        list(tqdm(executor.map(process_manifest, manifest_files), total=len(manifest_files), desc="Trimming stage", unit="file"))
+        list(tqdm(executor.map(process_manifest, manifest_files), total=total_files, desc="Trimming stage", unit="file"))
 
+    # Reset terminal - temporary solution FIXME
     try:
         os.system("stty sane")
     except Exception as e:
