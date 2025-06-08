@@ -11,6 +11,7 @@ from trim import trim_stage
 from talknet_asd.runTalkNet import load_yolo_model, load_talknet_model
 from asd import asd_stage
 from crop import crop_stage
+from label import label_stage
 
 if __name__ == "__main__":
     """Run all the stages of the dataset creation pipeline"""
@@ -94,6 +95,13 @@ if __name__ == "__main__":
         padding=CROP_PADDING,
         batch_size=CROP_BATCH_SIZE,
         crop_with_audio=CROP_WITH_AUDIO
+    )
+
+    # 9. Labeling stage: Label the cropped segments
+    label_stage(
+        crop_output_dir=CROP_OUTPUT_DIR,
+        labeling_dir=LABELING_DIR,
+        max_workers=LABELING_MAX_WORKERS
     )
 
     end_time = time.time()
