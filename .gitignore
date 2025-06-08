@@ -10,3 +10,4 @@
 /__pycache__/
 /cropped_outputs/
 /labeled_outputs/
+/dataset/
