@@ -3,11 +3,11 @@ DEVICE = "cuda"  # or "cpu"
 DELETE_INTERMEDIATE_FILES = True  # Delete intermediate files where possible
 
 # 1. Downloader configuration
-VIDEO_DIR = "/home/rhc/licenta4/video/"  # Directory containing video files
-AUDIO_DIR = "/home/rhc/licenta4/audio/"  # Directory containing audio files
+VIDEO_DIR = "./video/"  # Directory containing video files
+AUDIO_DIR = "./audio/"  # Directory containing audio files
 
 # 2. ASR configuration
-ASR_OUTPUT_DIR = "/home/rhc/licenta4/asr_outputs/"  # Directory to save the ASR output files
+ASR_OUTPUT_DIR = "./asr_outputs/"  # Directory to save the ASR output files
 ASR_MODEL_IDENTIFIER = "large-v2"  # "large-v3" doesn't work with word-level timestamps yet
 ASR_BACKEND = "CTranslate2" # or "CTranslate2", "TensorRT-LLM"
 ASR_COMPUTE_TYPE = "float32"  # or "int8", "float32"
@@ -18,7 +18,7 @@ ASR_INITIAL_PROMPTS = [None]
 ASR_BATCH_SIZE = 1
 
 # 3. Composition configuration
-COMP_OUTPUT_DIR = "/home/rhc/licenta4/composed_outputs/"  # Directory to save the composed output files
+COMP_OUTPUT_DIR = "./composed_outputs/"  # Directory to save the composed output files
 COMP_PUNCTUATION_ENDINGS = {".", "!", "?", ":"} # Punctuation that indicates the end of a sentence
 COMP_CONJUNCTIONS = {"și", "dar", "iar", "sau", "pentru", "deoarece", "că", "fiindcă", "însă", "decât"} # Sentence split heuristic (most used Romanian conjunctions) 
 COMP_MAX_WORDS = 25  # Maximum number of words in a sentence
@@ -27,7 +27,7 @@ COMP_REMOVE_PUNCTUATION = True  # Remove punctuation from the text
 COMP_MAX_WORKERS = 8  # Maximum number of threads for the composition stage
 
 # 4. Trimming configuration
-TRIM_OUTPUT_DIR = "/home/rhc/licenta4/trimmed_outputs/" # Directory to save the trimmed clips
+TRIM_OUTPUT_DIR = "./trimmed_outputs/" # Directory to save the trimmed clips
 TRIM_MAX_WORKERS = 8  # Maximum number of threads for trimming
 TRIM_PADDING = 1.0  # Seconds of padding to add to the start and end of each clip
 
@@ -52,7 +52,7 @@ CROP_OUTPUT_DIR = "/home/rhc/licenta4/cropped_outputs/"  # Directory to save the
 CROP_FACEMESH_ONNX_MODEL_PATH = "/home/rhc/licenta4/models/face_mesh_Nx3x192x192_post.onnx"  # Path to the ONNX model for face mesh
 CROP_MODEL_INPUT_SIZE = 192 # Input size for the ONNX model
 CROP_OUTPUT_MINIMUM_SIZE = 256 # Minimum size of the cropped region
-CROP_WITH_AUDIO = True # Whether to crop the audio along with the video
+CROP_WITH_AUDIO = False # Whether to crop the audio along with the video
 CROP_PADDING = 10 # Padding around the cropped face
 CROP_BATCH_SIZE = 2048 # Batch size for processing frames in the ONNX model
 CROP_LIP_LANDMARKS = [  # Lip landmarks for cropping
@@ -62,7 +62,3 @@ CROP_LIP_LANDMARKS = [  # Lip landmarks for cropping
     78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308
 ]
 CROP_ONNX_PROVIDERS = ['CUDAExecutionProvider', 'CPUExecutionProvider'] # Providers for ONNX model execution
-
-# 7. Labeling configuration
-LABELING_DIR = "/home/rhc/licenta4/dataset/" # Directory to save the final dataset
-LABELING_MAX_WORKERS = 8 # Maximum number of threads for labeling

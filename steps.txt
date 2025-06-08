@@ -2,6 +2,5 @@ download X
 asr X
 compose X
 trim X 
-asd X
-crop X 
-label 
+asd
+crop/label
