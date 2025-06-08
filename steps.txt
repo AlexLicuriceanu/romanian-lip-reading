@@ -1,6 +1,0 @@
-download X 
-asr X
-compose X
-trim X 
-asd
-crop/label
