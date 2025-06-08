@@ -174,7 +174,7 @@ def composition_stage(asr_output_dir, comp_output_dir, punctuation_endings, conj
                 continue
 
             with open(output_path, "w", encoding="utf-8") as f:
-                json.dump(output_manifest, f, indent=4, ensure_ascii=False)
+                json.dump(output_manifest, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     from pipeline_config import (
