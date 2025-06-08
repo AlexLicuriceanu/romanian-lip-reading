@@ -4,8 +4,10 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import time
 from datetime import datetime, timedelta
 from pipeline_config import *
+
 from asr import asr_load_model, asr_stage
 from composition import composition_stage
+from trim import trim_stage
 
 if __name__ == "__main__":
     """Run all the stages of the dataset creation pipeline"""
@@ -42,6 +44,15 @@ if __name__ == "__main__":
         mode=COMP_MODE,
         remove_punctuation=COMP_REMOVE_PUNCTUATION,
         max_workers=COMP_MAX_WORKERS
+    )
+
+    # 4. Trimming stage: Trim the video into clips based on the composed outputs
+    trim_stage(
+        video_dir=VIDEO_DIR,
+        comp_output_dir=COMP_OUTPUT_DIR,
+        trim_output_dir=TRIM_OUTPUT_DIR,
+        trim_padding=TRIM_PADDING,
+        trim_max_workers=TRIM_MAX_WORKERS
     )
 
     end_time = time.time()
