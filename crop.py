@@ -93,7 +93,7 @@ def process_batch(crop_output_dir, output_minimum_size, model_input_size, frames
         writer.write(lip_crop_resized)
 
 
-def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input_size, padding, batch_size, crop_with_audio):
+def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input_size, padding, batch_size, crop_with_audio, crop_lips):
     if not os.path.exists(crop_output_dir):
         os.makedirs(crop_output_dir)
 
@@ -145,6 +145,10 @@ def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input
 
             # Read frames in batches
             while True:
+
+                if not crop_lips:
+                    break
+
                 ret, frame = cap.read()
                 if not ret:
                     break
@@ -174,7 +178,7 @@ def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input
                     frames_batch.clear()
 
             # Process leftover frames
-            if input_batch:
+            if input_batch and crop_lips:
                 process_batch(
                     crop_output_dir=crop_output_dir,
                     output_minimum_size=output_minimum_size,
@@ -212,7 +216,7 @@ def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input
                 "label": segment.get("label", ""),
                 "segment_path": segment_path,
                 "segment_name": segment_name,
-                "cropped_segment_path": cropped_path
+                "cropped_segment_path": cropped_path if crop_lips else segment_path
             })
 
         # Save the manifest to a JSON file
@@ -228,7 +232,8 @@ if __name__ == "__main__":
         CROP_MODEL_INPUT_SIZE,
         CROP_PADDING,
         CROP_BATCH_SIZE,
-        CROP_WITH_AUDIO
+        CROP_WITH_AUDIO,
+        CROP_LIPS
     )
 
     crop_stage(
@@ -238,5 +243,6 @@ if __name__ == "__main__":
         model_input_size=CROP_MODEL_INPUT_SIZE,
         padding=CROP_PADDING,
         batch_size=CROP_BATCH_SIZE,
-        crop_with_audio=CROP_WITH_AUDIO
+        crop_with_audio=CROP_WITH_AUDIO,
+        crop_lips=CROP_LIPS
     )

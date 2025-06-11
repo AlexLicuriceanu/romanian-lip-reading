@@ -4,29 +4,17 @@ import shutil
 import subprocess
 import uuid
 from tqdm import tqdm
-from pipeline_config import ASD_OUTPUT_DIR
 from concurrent.futures import ThreadPoolExecutor
-import time
+from itertools import repeat
 
-# Constants
-INPUT_SIZE = 192
-OUTPUT_MINIMUM_SIZE = 256
-CROP_OUTPUT_DIR = "./cropped_outputs/"
-LABELING_DIR = "./labeled_outputs"
-CROP_LIPS = True
-MAX_THREADS = 8
 UID_LENGTH = 8
 
-def process_manifest_file(file):
-    manifest_path = os.path.join(CROP_OUTPUT_DIR, file)
-    try:
-        with open(manifest_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except Exception as e:
-        print(f"Failed to load {file}: {e}")
-        return
+def process_manifest_file(file, crop_output_dir, labeling_dir, crop_lips):
+    manifest_path = os.path.join(crop_output_dir, file)
+    
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-    video_path = data["video_path"]
     segments = data["segments"]
     subsegments_count = data.get("subsegments", {})
 
@@ -39,7 +27,7 @@ def process_manifest_file(file):
         if not label:
             continue  # skip empty labels
 
-        output_dir = os.path.join(LABELING_DIR, label)
+        output_dir = os.path.join(labeling_dir, label)
         os.makedirs(output_dir, exist_ok=True)
 
         # Thread-safe unique filename using uid
@@ -47,25 +35,20 @@ def process_manifest_file(file):
         output_name = f"{unique_id}_{label.replace(' ', '_')}.mp4"
         output_path = os.path.join(output_dir, output_name)
 
-        try:
-            segment_path = segment.get("segment_path")
-            cropped_segment_path = segment.get("cropped_segment_path")
-            segment_name = segment.get("segment_name")
-            subsegment_count = subsegments_count.get(segment_name)
-        except KeyError as e:
-            print(f"Missing key in segment {idx} of {file}: {e}")
-            continue
-            
+        segment_path = segment.get("segment_path")
+        cropped_segment_path = segment.get("cropped_segment_path")
+        segment_name = segment.get("segment_name")
+        subsegment_count = subsegments_count.get(segment_name)
 
-
-        if CROP_LIPS and cropped_segment_path:
+        if crop_lips == True:
             segment_path = cropped_segment_path
-
+            
         if subsegment_count == 1:
             try:
                 shutil.copy2(segment_path, output_path)
             except Exception as e:
                 print(f"Error copying segment {segment_name} of {file}: {e}")
+                
         elif subsegment_count > 1:
             cmd = [
                 "ffmpeg",
@@ -78,6 +61,7 @@ def process_manifest_file(file):
                 "-c", "copy",
                 output_path
             ]
+            
             try:
                 subprocess.run(cmd, check=True)
             except subprocess.CalledProcessError as e:
@@ -85,14 +69,21 @@ def process_manifest_file(file):
         else:
             print(f"Invalid subsegment count for {segment_name} in {file}, skipping.")
 
-def labeling_stage():
-    os.makedirs(LABELING_DIR, exist_ok=True)
+def labeling_stage(labeling_dir, crop_output_dir, labeling_max_workers, crop_lips):
+    os.makedirs(labeling_dir, exist_ok=True)
 
-    manifest_files = [f for f in os.listdir(CROP_OUTPUT_DIR) if f.endswith(".json")]
+    manifest_files = [f for f in os.listdir(crop_output_dir) if f.endswith(".json")]
 
-    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        list(tqdm(executor.map(process_manifest_file, manifest_files),
+    with ThreadPoolExecutor(max_workers=labeling_max_workers) as executor:
+        list(tqdm(executor.map(process_manifest_file, manifest_files, repeat(crop_output_dir), repeat(labeling_dir), repeat(crop_lips)),
                   total=len(manifest_files), desc="Labeling stage"))
 
 if __name__ == "__main__":
-    labeling_stage()
+    from pipeline_config import LABELING_DIR, CROP_OUTPUT_DIR, LABELING_MAX_WORKERS, CROP_LIPS
+
+    labeling_stage(
+        labeling_dir=LABELING_DIR,
+        crop_output_dir=CROP_OUTPUT_DIR,
+        labeling_max_workers=LABELING_MAX_WORKERS,
+        crop_lips=CROP_LIPS
+    )

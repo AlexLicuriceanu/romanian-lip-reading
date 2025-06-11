@@ -35,9 +35,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="YouTube Video Downloader")
     parser.add_argument("--video-list", help="Path to the .txt file with video URLs", required=True)
-    
     args = parser.parse_args()
 
-    print("Download stage started")
     download_videos_from_file(args.video_list, VIDEO_DIR)
-    print("Download stage finished\n")

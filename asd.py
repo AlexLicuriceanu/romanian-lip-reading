@@ -7,10 +7,9 @@ import glob
 from tqdm import tqdm
 from shutil import rmtree
 
-
 def asd_stage(trim_output_dir, asd_output_dir, yolo_model, talknet_model, max_workers_dataloader, facedet_scale,
               min_track, num_failed_det, min_face_size, duration_set, crop_scale, start_time, duration,
-              padding, max_word_gap, asd_debug, delete_intermediate_files):
+              padding, max_word_gap, asd_debug, delete_intermediate_files, min_area_ratio):
     """Main function to run the ASD stage of the pipeline"""
 
     os.makedirs(asd_output_dir, exist_ok=True)
@@ -250,7 +249,7 @@ if __name__ == "__main__":
         TRIM_OUTPUT_DIR, ASD_OUTPUT_DIR, ASD_MAX_WORKERS_DATALOADER, ASD_FACEDET_SCALE, 
         ASD_MIN_TRACK, ASD_NUM_FAILED_DET, ASD_MIN_FACE_SIZE, ASD_CROP_SCALE, ASD_START_TIME, ASD_DURATION_SET,
         ASD_DURATION, ASD_MAX_WORD_GAP, ASD_DEBUG, TRIM_PADDING, ASD_YOLO_MODEL_PATH, ASD_TALKNET_MODEL_PATH,
-        DELETE_INTERMEDIATE_FILES
+        DELETE_INTERMEDIATE_FILES, ASD_MIN_AREA_RATIO
     )
 
     asd_yolo_model = load_yolo_model(model_path=ASD_YOLO_MODEL_PATH)
@@ -273,6 +272,7 @@ if __name__ == "__main__":
         padding=TRIM_PADDING,
         max_word_gap=ASD_MAX_WORD_GAP,
         asd_debug=ASD_DEBUG,
-        delete_intermediate_files=DELETE_INTERMEDIATE_FILES
+        delete_intermediate_files=DELETE_INTERMEDIATE_FILES,
+        min_area_ratio=ASD_MIN_AREA_RATIO
     )
     

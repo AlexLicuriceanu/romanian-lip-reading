@@ -32,9 +32,9 @@ TRIM_MAX_WORKERS = 8  # Maximum number of threads for trimming
 TRIM_PADDING = 1.0  # Seconds of padding to add to the start and end of each clip
 
 # 5. ASD configuration
-ASD_OUTPUT_DIR = "/home/rhc/licenta4/asd_outputs/"  # Directory to save the ASD output files
-ASD_YOLO_MODEL_PATH = "/home/rhc/licenta4/models/yolov11n-face.pt" # Path to the YOLO model for face detection
-ASD_TALKNET_MODEL_PATH = "/home/rhc/licenta4/models/pretrain_TalkSet.model" # Path to the TalkNet model for ASD
+ASD_OUTPUT_DIR = "./asd_outputs/"  # Directory to save the ASD output files
+ASD_YOLO_MODEL_PATH = "./models/yolov11n-face.pt" # Path to the YOLO model for face detection
+ASD_TALKNET_MODEL_PATH = "./models/pretrain_TalkSet.model" # Path to the TalkNet model for ASD
 ASD_MAX_WORKERS_DATALOADER = 10  # Number of workers for the dataloader
 ASD_FACEDET_SCALE = 0.25 # Scale factor for face detection, the frames will be scale to 0.25 orig (Only for S3FD - slow, don't use)
 ASD_MIN_FACE_SIZE = 1 # Minimum face size in pixels (Only for S3FD - slow, don't use)
@@ -46,10 +46,11 @@ ASD_MAX_WORD_GAP = 0.8 # Maximum gap (in seconds) between adjacent segments to b
 ASD_START_TIME = 0 # The start time of the video (Don't modify)
 ASD_DURATION = 0 # The duration of the video, when set as 0, will extract the whole video (Don't modify)
 ASD_DEBUG = False # Show debug messages when running ASD
+ASD_MIN_AREA_RATIO = 0.001 # Minimum area ratio of the face bounding box to the frame size to consider it a valid face detection
 
 # 6. Cropping configuration
-CROP_OUTPUT_DIR = "/home/rhc/licenta4/cropped_outputs/"  # Directory to save the cropped outputs
-CROP_FACEMESH_ONNX_MODEL_PATH = "/home/rhc/licenta4/models/face_mesh_Nx3x192x192_post.onnx"  # Path to the ONNX model for face mesh
+CROP_OUTPUT_DIR = "./cropped_outputs/"  # Directory to save the cropped outputs
+CROP_FACEMESH_ONNX_MODEL_PATH = "./models/face_mesh_Nx3x192x192_post.onnx"  # Path to the ONNX model for face mesh
 CROP_MODEL_INPUT_SIZE = 192 # Input size for the ONNX model
 CROP_OUTPUT_MINIMUM_SIZE = 256 # Minimum size of the cropped region
 CROP_WITH_AUDIO = False # Whether to crop the audio along with the video
@@ -61,4 +62,12 @@ CROP_LIP_LANDMARKS = [  # Lip landmarks for cropping
     78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308,
     78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308
 ]
-CROP_ONNX_PROVIDERS = ['CUDAExecutionProvider', 'CPUExecutionProvider'] # Providers for ONNX model execution
+CROP_ONNX_PROVIDERS = [ # Providers for ONNX model execution
+    'TensorrtExecutionProvider',
+    'CUDAExecutionProvider',
+    'CPUExecutionProvider']
+CROP_LIPS = True  # Whether to crop the lip region
+
+# 7. Labeling configuration
+LABELING_DIR = "./dataset"
+LABELING_MAX_WORKERS = 8  # Maximum number of threads for labeling

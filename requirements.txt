@@ -1,2 +1,4 @@
-yt_dlp
 onnxruntime-gpu
+yt_dlp
+-e git+https://github.com/AlexLicuriceanu/TalkNet-ASD.git@main#egg=talknet_asd
+-e git+https://github.com/AlexLicuriceanu/WhisperS2T.git@main#egg=whisper_s2t

@@ -18,4 +18,7 @@ rm -rf /tmp/mpi4py*
 
 echo ""
 echo "###########################[ Installing TensorRT-LLM ]###########################"
-pip3 install --no-cache-dir tensorrt_llm --extra-index-url https://pypi.nvidia.com
+pip3 install wheel
+pip3 install --upgrade pip
+pip3 install --extra-index-url https://pypi.nvidia.com tensorrt
+sudo apt-get -y install libopenmpi-dev && pip3 install --upgrade pip setuptools && pip3 install tensorrt_llm
