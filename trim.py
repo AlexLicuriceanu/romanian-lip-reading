@@ -25,9 +25,11 @@ def process_segment(trim_padding, segment, idx, video_file, video_name, video_le
     ]
 
     subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     segment["segment_path"] = abs_out_path
 
-    return segment
+    return f"{idx + 1}_{video_name}", segment
+
 
 def process_manifest(file, video_dir, comp_output_dir, trim_output_dir, trim_padding, trim_max_workers):
     """Process a single manifest file to trim segments from the corresponding video"""
@@ -53,7 +55,7 @@ def process_manifest(file, video_dir, comp_output_dir, trim_output_dir, trim_pad
     os.makedirs(video_trim_dir, exist_ok=True)
 
     # Thread-based segment parallelism
-    updated_segments = []
+    updated_segments = {}
     with ThreadPoolExecutor(max_workers=trim_max_workers) as executor:
         futures = [
             executor.submit(
@@ -66,10 +68,8 @@ def process_manifest(file, video_dir, comp_output_dir, trim_output_dir, trim_pad
         ]
 
         for future in tqdm(futures, total=len(futures), desc=video_name, unit="segment", leave=False):
-            updated_segments.append(future.result())
-
-    # Sort segments to preserve original order
-    updated_segments.sort(key=lambda seg: seg["segment_path"])
+            name, seg = future.result()
+            updated_segments[name] = seg
 
     manifest = {
         "video_path": video_path,

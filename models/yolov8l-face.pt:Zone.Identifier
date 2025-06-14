@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://github.com/akanametov/yolo-face/releases/tag/v0.0.0
+HostUrl=https://objects.githubusercontent.com/github-production-release-asset-2e65be/592261808/42fc440b-3870-4808-87d6-dd8d59d28c9e?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=releaseassetproduction%2F20250611%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250611T183643Z&X-Amz-Expires=300&X-Amz-Signature=350d7cca7547edbceff3b49d4ad13fcc42700b4a3309d160f24e2858aeee78ff&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3Dyolov8l-face.pt&response-content-type=application%2Foctet-stream
