@@ -47,13 +47,15 @@ ASD_START_TIME = 0 # The start time of the video (Don't modify)
 ASD_DURATION = 0 # The duration of the video, when set as 0, will extract the whole video (Don't modify)
 ASD_DEBUG = False # Show debug messages when running ASD
 ASD_MIN_AREA_RATIO = 0.001 # Minimum area ratio of the face bounding box to the frame size to consider it a valid face detection
+ASD_MAX_WORKERS = 1 # Maximum number of processes for the ASD stage
+ASD_IN_MEMORY_THRESHOLD = 500 # Maximum number of frames to keep in memory before writing to disk
 
 # 6. Cropping configuration
 CROP_OUTPUT_DIR = "./cropped_outputs/"  # Directory to save the cropped outputs
 CROP_FACEMESH_ONNX_MODEL_PATH = "./models/face_mesh_Nx3x192x192_post.onnx"  # Path to the ONNX model for face mesh
 CROP_MODEL_INPUT_SIZE = 192 # Input size for the ONNX model
 CROP_OUTPUT_MINIMUM_SIZE = 256 # Minimum size of the cropped region
-CROP_WITH_AUDIO = False # Whether to crop the audio along with the video
+CROP_WITH_AUDIO = True # Whether to crop the audio along with the video
 CROP_PADDING = 10 # Padding around the cropped face
 CROP_BATCH_SIZE = 2048 # Batch size for processing frames in the ONNX model
 CROP_LIP_LANDMARKS = [  # Lip landmarks for cropping
@@ -63,7 +65,7 @@ CROP_LIP_LANDMARKS = [  # Lip landmarks for cropping
     78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308
 ]
 CROP_ONNX_PROVIDERS = [ # Providers for ONNX model execution
-    'TensorrtExecutionProvider',
+    #'TensorrtExecutionProvider',
     'CUDAExecutionProvider',
     'CPUExecutionProvider']
 CROP_LIPS = True  # Whether to crop the lip region

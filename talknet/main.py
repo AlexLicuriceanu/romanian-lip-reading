@@ -36,8 +36,6 @@ def run_talknet_batch(clip_dir, save_dir, segments, max_workers, in_memory_thres
     os.makedirs(save_dir, exist_ok=True)
     save_paths = [os.path.join(save_dir, video_name, os.path.splitext(os.path.basename(path))[0]) for path in full_paths]
 
-    # full_paths = [full_paths[10]]
-    # save_paths = [save_paths[10]]
     for save_path in save_paths:
         os.makedirs(save_path, exist_ok=True)
 
@@ -66,12 +64,12 @@ def run_talknet_batch(clip_dir, save_dir, segments, max_workers, in_memory_thres
                     print(f"No word_timestamps for {segment_name}, skipping")
                     continue
 
-                # Get best speaker track index
                 manifests = []
                 fps = 25.0
                 padding = 0.2
                 offset = word_timestamps[0]["start"]
 
+                # Compute the spoken words for each track
                 for i, (track, score) in enumerate(zip(tracks, scores)):
                     if len(track['track']['frame']) == 0:
                         continue
@@ -87,14 +85,6 @@ def run_talknet_batch(clip_dir, save_dir, segments, max_workers, in_memory_thres
 
                     abs_start = offset + seg_start
                     abs_end = offset + seg_end
-
-                    if segment_name == "96_Integreaza_defectele_in_personaj_Madalina_Dobrovolschi_TEDxICHB_Youth_Live":
-                        print("Track frames:", frames)
-                        print("Start/end time:", abs_start, abs_end)
-                        print("Matching words:", [
-                            w for w in word_timestamps
-                            if w["end"] >= abs_start - padding and w["start"] <= abs_end + padding
-                        ])
 
                     # Collect words overlapping with this track's duration
                     spoken_words = [
