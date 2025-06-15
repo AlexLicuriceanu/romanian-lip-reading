@@ -2,9 +2,25 @@ import whisper_s2t
 import json
 import os
 from tqdm import tqdm
+from pipeline_config import (
+    VIDEO_DIR, AUDIO_DIR, ASR_OUTPUT_DIR,
+    ASR_MODEL_IDENTIFIER, ASR_BACKEND, ASR_COMPUTE_TYPE, DEVICE,
+    ASR_OPTIONS, ASR_LANG_CODES, ASR_TASKS, ASR_INITIAL_PROMPTS,
+    ASR_BATCH_SIZE
+)
 
 def asr_load_model(model_identifier, backend, compute_type, device, asr_options):
-    """Load the ASR model with specified parameters"""
+    """
+    Load the ASR model with specified parameters.
+    Arguments:
+        model_identifier (str): Identifier for the ASR model.
+        backend (str): Backend to use for the ASR model (e.g., "CTranslate2", "TensorRT-LLM").
+        compute_type (str): Compute type for the ASR model (e.g., "float32", "int8").
+        device (str): Device to run the model on (e.g., "cuda", "cpu").
+        asr_options (dict): Additional options for the ASR model.
+    Returns:
+        model: Loaded ASR model.
+    """
     return whisper_s2t.load_model(
         model_identifier=model_identifier,
         backend=backend,
@@ -14,7 +30,18 @@ def asr_load_model(model_identifier, backend, compute_type, device, asr_options)
     )
 
 def asr(model, file_path, lang_codes, tasks, initial_prompts, batch_size):
-    """Perform ASR on the audio files using the given parameters"""
+    """
+    Perform ASR on the audio files using the given parameters.
+    Arguments:
+        model: The loaded ASR model.
+        file_path (list): List of file paths to the audio files.
+        lang_codes (list): List of language codes for ASR.
+        tasks (list): List of tasks to perform (e.g., "transcribe").
+        initial_prompts (list): Initial prompts for the ASR model.
+        batch_size (int): Batch size for processing.
+    Returns:
+        results: ASR results for the audio files.
+    """
     results = model.transcribe_with_vad(
         file_path,
         lang_codes=lang_codes,
@@ -28,12 +55,32 @@ def asr(model, file_path, lang_codes, tasks, initial_prompts, batch_size):
     return results
 
 def extract_audio(video_path, audio_path):
-    """Extract audio from the video file and save it as a WAV file"""
+    """
+    Extract audio from the video file and save it as a WAV file.
+    Arguments:
+        video_path (str): Path to the input video file.
+        audio_path (str): Path where the extracted audio will be saved.
+    Returns:
+        None
+    """
     os.system(f"ffmpeg -y -hide_banner -loglevel error -i \"{video_path}\" -ar 16000 -ac 1 -vn \"{audio_path}\"")
 
 
 def asr_stage(video_dir, audio_dir, asr_output_dir, model, lang_codes, tasks, initial_prompts, batch_size):
-    """Main ASR stage to process video files, extract audio, and perform ASR"""
+    """
+    Main ASR stage to process video files, extract audio, and perform ASR.
+    Arguments:
+        video_dir (str): Directory containing video files.
+        audio_dir (str): Directory to save extracted audio files.
+        asr_output_dir (str): Directory to save ASR output manifests.
+        model: The loaded ASR model.
+        lang_codes (list): List of language codes for ASR.
+        tasks (list): List of tasks to perform (e.g., "transcribe").
+        initial_prompts (list): Initial prompts for the ASR model.
+        batch_size (int): Batch size for processing.
+    Returns:
+        None
+    """
     os.makedirs(audio_dir, exist_ok=True)
     os.makedirs(asr_output_dir, exist_ok=True)
 
@@ -63,12 +110,14 @@ def asr_stage(video_dir, audio_dir, asr_output_dir, model, lang_codes, tasks, in
             continue
 
         # Perform ASR on the extracted audio
-        results = asr(model=model,
-                      file_path=[audio_path], 
-                      lang_codes=lang_codes,
-                      tasks=tasks,
-                      initial_prompts=initial_prompts,
-                      batch_size=batch_size)
+        results = asr(
+            model=model,
+            file_path=[audio_path], 
+            lang_codes=lang_codes,
+            tasks=tasks,
+            initial_prompts=initial_prompts,
+            batch_size=batch_size
+        )
         
         # WhisperS2T returns List[List[Dict]] 
         result = results[0]
@@ -87,19 +136,15 @@ def asr_stage(video_dir, audio_dir, asr_output_dir, model, lang_codes, tasks, in
 
         # Save the manifest to JSON
         output_path = os.path.join(asr_output_dir, f"{os.path.splitext(video_file)[0]}.json")
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(output_manifest, f, indent=2, ensure_ascii=False)
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(output_manifest, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[ASR] Error writing manifest for {video_file}: {e}")
+            continue
 
 
 if __name__ == "__main__":
-    # In case the script is run directly, not from pipeline.py
-    from pipeline_config import (
-        VIDEO_DIR, AUDIO_DIR, ASR_OUTPUT_DIR,
-        ASR_MODEL_IDENTIFIER, ASR_BACKEND, ASR_COMPUTE_TYPE, DEVICE,
-        ASR_OPTIONS, ASR_LANG_CODES, ASR_TASKS, ASR_INITIAL_PROMPTS,
-        ASR_BATCH_SIZE
-    )
-
     model = asr_load_model(
         model_identifier=ASR_MODEL_IDENTIFIER,
         backend=ASR_BACKEND,

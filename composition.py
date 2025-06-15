@@ -3,13 +3,32 @@ import os
 import re
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from pipeline_config import (
+    ASR_OUTPUT_DIR, COMP_OUTPUT_DIR,
+    COMP_PUNCTUATION_ENDINGS, COMP_CONJUNCTIONS, COMP_MAX_WORDS,
+    COMP_MODE, COMP_REMOVE_PUNCTUATION, COMP_MAX_WORKERS
+)
 
 def clean_text(text):
-    """Sanitize text"""
+    """
+    Sanitize text
+    Arguments:
+        text (str): Input text to be sanitized.
+    Returns:
+        str: Sanitized text with punctuation and symbols removed and converted to lowercase.
+    """
     return re.sub(r"[.,:!?\'\"]", "", str.lower(text))
 
 def split_sentence_by_heuristic(words, conjunctions, max_words):
-    """Split a list of words into chunks based on conjunctions and maximum word count."""
+    """
+    Split a list of words into chunks based on conjunctions and maximum word count.
+    Arguments:
+        words (list): List of word dictionaries, each containing 'word', 'start', and 'end'.
+        conjunctions (set): Set of conjunctions to use for splitting.
+        max_words (int): Maximum number of words per chunk.
+    Returns:
+        list: List of chunks, where each chunk is a list of word dictionaries.
+    """
     chunks = []
     chunk = []
     last_conjunction_index = -1
@@ -38,7 +57,18 @@ def split_sentence_by_heuristic(words, conjunctions, max_words):
     return chunks
 
 def process_segments(word_timestamps, video_path, punctuation_endings, conjunctions, max_words, mode):
-    """Process word timestamps into segments based on the specified mode"""
+    """
+    Process word timestamps into segments based on the specified mode.
+    Arguments:
+        word_timestamps (list): List of word timestamps, each containing 'word', 'start', and 'end'.
+        video_path (str): Path to the video file.
+        punctuation_endings (set): Set of punctuation characters that indicate sentence endings.
+        conjunctions (set): Set of conjunctions to use for splitting sentences.
+        max_words (int): Maximum number of words per segment.
+        mode (str): Mode of segmentation ('word', 'sentence', or 'heuristic').
+    Returns:
+        dict: A dictionary containing the video path, full text, and segments.
+    """
     all_words = word_timestamps
     full_text = " ".join(w["word"] for w in all_words)
 
@@ -102,26 +132,39 @@ def process_segments(word_timestamps, video_path, punctuation_endings, conjuncti
     }
 
 def process_single_file(asr_output_dir, comp_output_dir, file, punctuation_endings, conjunctions, max_words, mode, remove_punctuation):
-    # Load the ASR manifest
+    """
+    Process a single ASR output file to create a composed manifest.
+    Arguments:
+        asr_output_dir (str): Directory containing ASR output files.
+        comp_output_dir (str): Directory to save composed manifests.
+        file (str): Name of the ASR output file to process.
+        punctuation_endings (set): Set of punctuation characters that indicate sentence endings.
+        conjunctions (set): Set of conjunctions to use for splitting sentences.
+        max_words (int): Maximum number of words per segment.
+        mode (str): Mode of segmentation ('word', 'sentence', or 'heuristic').
+        remove_punctuation (bool): Whether to remove punctuation from the text.
+    Returns:
+        tuple: A tuple containing the output path and the composed manifest.
+    """
     try:
         with open(os.path.join(asr_output_dir, file), "r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
-        return None, f"{file} failed to load: {e}"
+        return None, f"[COMP] {file} failed to load: {e}"
 
     if not isinstance(data, dict) or "word_timestamps" not in data:
-        return None, f"{file} has invalid format, skipping"
+        return None, f"[COMP] {file} has invalid format, skipping"
 
     # Extract word timestamps and video path
     try:
         word_timestamps = data["word_timestamps"]
         video_path = data["video_path"]
     except KeyError as e:
-        return None, f"Missing key in {file}: {e}, skipping"
+        return None, f"[COMP] Missing key in {file}: {e}, skipping"
 
     # Check if word_timestamps is a list
     if not isinstance(word_timestamps, list):
-        return None, f"Invalid word_timestamps format in {file}, expected a list, skipping"
+        return None, f"[COMP] Invalid word_timestamps format in {file}, expected a list, skipping"
 
     # Process word timestamps to create segments
     output_manifest = process_segments(word_timestamps=word_timestamps, video_path=video_path, mode=mode,
@@ -141,7 +184,20 @@ def process_single_file(asr_output_dir, comp_output_dir, file, punctuation_endin
     return output_path, output_manifest
 
 def composition_stage(asr_output_dir, comp_output_dir, punctuation_endings, conjunctions, max_words, mode, remove_punctuation, max_workers=1):
-    """Composition stage to process ASR outputs and compose segments"""
+    """
+    Composition stage to process ASR outputs and compose segments.
+    Arguments:
+        asr_output_dir (str): Directory containing ASR output files.
+        comp_output_dir (str): Directory to save composed manifests.
+        punctuation_endings (set): Set of punctuation characters that indicate sentence endings.
+        conjunctions (set): Set of conjunctions to use for splitting sentences.
+        max_words (int): Maximum number of words per segment.
+        mode (str): Mode of segmentation ('word', 'sentence', or 'heuristic').
+        remove_punctuation (bool): Whether to remove punctuation from the text.
+        max_workers (int): Number of worker processes to use for parallel processing.
+    Returns:
+        None
+    """
     os.makedirs(comp_output_dir, exist_ok=True)
 
     # Get all ASR manifests
@@ -172,17 +228,14 @@ def composition_stage(asr_output_dir, comp_output_dir, punctuation_endings, conj
             if output_path is None:
                 print(output_manifest)  # output_manifest contains the error message
                 continue
-
-            with open(output_path, "w", encoding="utf-8") as f:
-                json.dump(output_manifest, f, indent=2, ensure_ascii=False)
+            
+            try:
+                with open(output_path, "w", encoding="utf-8") as f:
+                    json.dump(output_manifest, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"[COMP] Failed to write {output_path}: {e}")
 
 if __name__ == "__main__":
-    from pipeline_config import (
-        ASR_OUTPUT_DIR, COMP_OUTPUT_DIR,
-        COMP_PUNCTUATION_ENDINGS, COMP_CONJUNCTIONS, COMP_MAX_WORDS,
-        COMP_MODE, COMP_REMOVE_PUNCTUATION, COMP_MAX_WORKERS
-    )
-
     composition_stage(
         asr_output_dir=ASR_OUTPUT_DIR,
         comp_output_dir=COMP_OUTPUT_DIR,
