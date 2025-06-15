@@ -5,7 +5,7 @@ DELETE_INTERMEDIATE_FILES = True  # Delete intermediate files where possible
 # 1. Downloader configuration
 VIDEO_DIR = "./video/"  # Directory containing video files
 AUDIO_DIR = "./audio/"  # Directory containing audio files
-DOWNLOADER_FORMAT = "bestvideo+bestaudio/best"  # Format for downloading videos "bv[height<=1080]+ba/b[height<=1080]" for max 1080p
+DOWNLOADER_FORMAT = "bestvideo+bestaudio/best"  # "bv[height<=1080]+ba/b[height<=1080]" for 1080p or "bestvideo+bestaudio/best" for best quality
 DOWNLOADER_QUIET = True  # Whether to suppress output from the downloader
 
 # 2. ASR configuration

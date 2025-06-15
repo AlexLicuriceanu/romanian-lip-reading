@@ -3,15 +3,14 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import time
 from datetime import timedelta
+import multiprocessing as mp
 from pipeline_config import *
 
 from asr import asr_load_model, asr_stage
 from composition import composition_stage
 from trim import trim_stage
-from talknet_asd.runTalkNet import load_yolo_model, load_talknet_model
 from asd import asd_stage
 from crop import crop_stage
-from label import labeling_stage
 
 if __name__ == "__main__":
     """Run all the stages of the dataset creation pipeline"""
@@ -26,7 +25,7 @@ if __name__ == "__main__":
         asr_options=ASR_OPTIONS
     )
 
-    # 2. ASR stage: Run ASR on the video files
+    # 2. ASR stage: Process the videos and run ASR
     asr_stage(
         video_dir=VIDEO_DIR,
         audio_dir=AUDIO_DIR,
@@ -37,6 +36,7 @@ if __name__ == "__main__":
         initial_prompts=ASR_INITIAL_PROMPTS,
         batch_size=ASR_BATCH_SIZE
     )
+
 
     # 3. Composition stage: Compose the ASR outputs into words or sentences
     composition_stage(
@@ -59,35 +59,14 @@ if __name__ == "__main__":
         trim_max_workers=TRIM_MAX_WORKERS
     )
 
-    # 5. ASD stage: Load the YOLO model for face detection
-    asd_yolo_model = load_yolo_model(model_path=ASD_YOLO_MODEL_PATH)
-
-    # 6. ASD stage: Load the TalkNet model for ASD
-    asd_talknet_model = load_talknet_model(model_path=ASD_TALKNET_MODEL_PATH)
-
-    # 7. ASD stage: Run the ASD model on the trimmed clips
+    # 5. ASD stage: Run the ASD model on the trimmed clips
+    mp.set_start_method('spawn', force=True)
     asd_stage(
         trim_output_dir=TRIM_OUTPUT_DIR,
-        asd_output_dir=ASD_OUTPUT_DIR,
-        yolo_model=asd_yolo_model,
-        talknet_model=asd_talknet_model,
-        max_workers_dataloader=ASD_MAX_WORKERS_DATALOADER,
-        facedet_scale=ASD_FACEDET_SCALE,
-        min_track=ASD_MIN_TRACK,
-        duration_set=ASD_DURATION_SET,
-        num_failed_det=ASD_NUM_FAILED_DET,
-        min_face_size=ASD_MIN_FACE_SIZE,
-        crop_scale=ASD_CROP_SCALE,
-        start_time=ASD_START_TIME,
-        duration=ASD_DURATION,
-        padding=TRIM_PADDING,
-        max_word_gap=ASD_MAX_WORD_GAP,
-        asd_debug=ASD_DEBUG,
-        delete_intermediate_files=DELETE_INTERMEDIATE_FILES,
-        min_area_ratio=ASD_MIN_AREA_RATIO
+        asd_output_dir=ASD_OUTPUT_DIR
     )
 
-    # 8. Cropping stage: Crop the lip region from the ASD outputs
+    # 6. Cropping stage: Crop the lip region from the ASD outputs
     crop_stage(
         asd_output_dir=ASD_OUTPUT_DIR,
         crop_output_dir=CROP_OUTPUT_DIR,
@@ -96,14 +75,6 @@ if __name__ == "__main__":
         padding=CROP_PADDING,
         batch_size=CROP_BATCH_SIZE,
         crop_with_audio=CROP_WITH_AUDIO,
-        crop_lips=CROP_LIPS
-    )
-
-    # 9. Labeling stage: Label the cropped segments
-    labeling_stage(
-        labeling_dir=LABELING_DIR,
-        crop_output_dir=CROP_OUTPUT_DIR,
-        labeling_max_workers=LABELING_MAX_WORKERS,
         crop_lips=CROP_LIPS
     )
 
