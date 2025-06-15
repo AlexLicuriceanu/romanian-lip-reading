@@ -19,12 +19,31 @@ from pipeline_config import (
 session = ort.InferenceSession(CROP_FACEMESH_ONNX_MODEL_PATH, providers=CROP_ONNX_PROVIDERS)
 input_name = session.get_inputs()[0].name
 output_names = [o.name for o in session.get_outputs()]
-print(f"Loaded FaceMesh model from {CROP_FACEMESH_ONNX_MODEL_PATH}")
 
 def process_batch(crop_output_dir, output_minimum_size, model_input_size, frames, input_batch,
                   out_writer_dict, width, height, padding, fps, label, segment_key):
+    """
+    Process a batch of frames to detect lip landmarks and crop the lip region.
+    Arguments:
+        crop_output_dir (str): Directory to save cropped lip segments.
+        output_minimum_size (int): Minimum size for the output video.
+        model_input_size (int): Input size for the model.
+        frames (list): List of frames from the video.
+        input_batch (list): List of input tensors for the model.
+        out_writer_dict (dict): Dictionary to hold video writers for each segment.
+        width (int): Width of the video frames.
+        height (int): Height of the video frames.
+        padding (int): Padding to apply around the cropped lip region.
+        fps (float): Frames per second of the video.
+        label (str): Label for the segment.
+        segment_key (str): Unique key for the segment.
+    Returns:
+        None
+    """
     input_tensor = np.stack(input_batch)
     batch_size = input_tensor.shape[0]
+
+    # Dummy values, video is already face-cropped
     crop_x1 = np.zeros((batch_size, 1), dtype=np.int32)
     crop_y1 = np.zeros((batch_size, 1), dtype=np.int32)
     crop_width = np.full((batch_size, 1), model_input_size, dtype=np.int32)
@@ -49,22 +68,26 @@ def process_batch(crop_output_dir, output_minimum_size, model_input_size, frames
         if score < 0.95:
             continue
 
+        # Convert landmarks to pixel coordinates
         points = [(int(landmarks[idx][0] / model_input_size * width),
                    int(landmarks[idx][1] / model_input_size * height)) for idx in CROP_LIP_LANDMARKS]
         xs, ys = zip(*points)
         x1, y1 = max(min(xs) - padding, 0), max(min(ys) - padding, 0)
         x2, y2 = min(max(xs) + padding, width - 1), min(max(ys) + padding, height - 1)
 
+        # Ensure the box is square
         box_size = max(x2 - x1, y2 - y1)
         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
         half = box_size // 2
         sq_x1, sq_y1 = max(cx - half, 0), max(cy - half, 0)
         sq_x2, sq_y2 = min(sq_x1 + box_size, width), min(sq_y1 + box_size, height)
 
+        # Crop the lip region
         lip_crop = frame[sq_y1:sq_y2, sq_x1:sq_x2]
         if lip_crop.shape[0] < 5 or lip_crop.shape[1] < 5:
             continue
 
+        # Resize the cropped lip region to the minimum size
         if segment_key not in out_writer_dict:
             output_size = (lip_crop.shape[1], lip_crop.shape[0])
             if output_minimum_size and output_minimum_size > output_size[0]:
@@ -77,7 +100,20 @@ def process_batch(crop_output_dir, output_minimum_size, model_input_size, frames
 
 def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input_size,
                padding, batch_size, crop_with_audio, crop_lips):
-    
+    """
+    Crop the lip region from the ASD outputs.
+    Arguments:
+        asd_output_dir (str): Directory containing the ASD output files.
+        crop_output_dir (str): Directory to save cropped lip segments.
+        output_minimum_size (int): Minimum size for the output video.
+        model_input_size (int): Input size for the model.
+        padding (int): Padding to apply around the cropped lip region.
+        batch_size (int): Number of frames to process in a batch.
+        crop_with_audio (bool): Whether to crop with audio.
+        crop_lips (bool): Whether to crop the lip region.
+    Returns:
+        None
+    """
     os.makedirs(crop_output_dir, exist_ok=True)
     asd_files = [f for f in os.listdir(asd_output_dir) if f.endswith(".json")]
 
