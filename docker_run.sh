@@ -1,2 +1,0 @@
-#/bin/bash
-docker run --gpus all -it -v /home/rhc/licenta4/video:/app/video -v /home/rhc/licenta4/audio:/app/audio -v /home/rhc/licenta4/asd_outputs:/app/asd_outputs -v /home/rhc/licenta4/asr_outputs:/app/asr_outputs -v /home/rhc/licenta4/composed_outputs:/app/composed_outputs -v /home/rhc/licenta4/cropped_outputs:/app/cropped_outputs -v /home/rhc/licenta4/dataset:/app/dataset -v /home/rhc/trimmed_outputs:/app/trimmed_outputs romanian-lip-reading

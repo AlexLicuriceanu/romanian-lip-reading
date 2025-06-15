@@ -28,7 +28,7 @@ def asd_stage(trim_output_dir=TRIM_OUTPUT_DIR, asd_output_dir=ASD_OUTPUT_DIR):
                 trim_files.append(os.path.join(root, f))
 
     # Run the ASD stage
-    for file in tqdm(trim_files, desc="ASD stage", unit="file", total=len(trim_files)):
+    for file in tqdm(trim_files, desc="ASD stage", unit="file", total=len(trim_files), leave=False):
         try:
             with open(file, "r", encoding="utf-8") as f:
                 data = json.load(f)

@@ -35,7 +35,7 @@ TRIM_PADDING = 1.0  # Seconds of padding to add to the start and end of each cli
 
 # 5. ASD configuration
 ASD_OUTPUT_DIR = "./asd_outputs/"  # Directory to save the ASD output files
-ASD_YOLO_MODEL_PATH = "./models/yolov11n-face.pt" # Path to the YOLO model for face detection
+ASD_YOLO_MODEL_PATH = "./models/yolov8n-face.pt" # Path to the YOLO model for face detection
 ASD_TALKNET_MODEL_PATH = "./models/pretrain_TalkSet.model" # Path to the TalkNet model for ASD
 ASD_MAX_WORKERS_DATALOADER = 10  # Number of workers for the dataloader
 ASD_FACEDET_SCALE = 0.25 # Scale factor for face detection, the frames will be scale to 0.25 orig (Only for S3FD - slow, don't use)
@@ -44,11 +44,6 @@ ASD_MIN_TRACK = 20 # Number of min frames for each shot
 ASD_NUM_FAILED_DET = 10 # Number of missed detections allowed before tracking is stopped
 ASD_DURATION_SET = {1, 2, 3} # {1,2,4,6} - Slower, more reliable or {1,1,1,2,2,2,3,3,4,5,6} - Even slower, even more reliable 
 ASD_CROP_SCALE = 0.40 # Scale bounding box
-ASD_MAX_WORD_GAP = 0.8 # Maximum gap (in seconds) between adjacent segments to be considered part of the same segment
-ASD_START_TIME = 0 # The start time of the video (Don't modify)
-ASD_DURATION = 0 # The duration of the video, when set as 0, will extract the whole video (Don't modify)
-ASD_DEBUG = False # Show debug messages when running ASD
-ASD_MIN_AREA_RATIO = 0.001 # Minimum area ratio of the face bounding box to the frame size to consider it a valid face detection
 ASD_MAX_WORKERS = 1 # Maximum number of processes for the ASD stage
 ASD_IN_MEMORY_THRESHOLD = 500 # Maximum number of frames to keep in memory before writing to disk
 
@@ -56,7 +51,7 @@ ASD_IN_MEMORY_THRESHOLD = 500 # Maximum number of frames to keep in memory befor
 CROP_OUTPUT_DIR = "./cropped_outputs/"  # Directory to save the cropped outputs
 CROP_FACEMESH_ONNX_MODEL_PATH = "./models/face_mesh_Nx3x192x192_post.onnx"  # Path to the ONNX model for face mesh
 CROP_MODEL_INPUT_SIZE = 192 # Input size for the ONNX model
-CROP_OUTPUT_MINIMUM_SIZE = 256 # Minimum size of the cropped region
+CROP_OUTPUT_MINIMUM_SIZE = 256 # Minimum size of the cropped region or None to keep the original crop
 CROP_WITH_AUDIO = True # Whether to crop the audio along with the video
 CROP_PADDING = 10 # Padding around the cropped face
 CROP_BATCH_SIZE = 2048 # Batch size for processing frames in the ONNX model

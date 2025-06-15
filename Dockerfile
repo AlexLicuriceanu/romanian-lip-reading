@@ -1,5 +1,5 @@
 FROM pytorch/pytorch:2.7.0-cuda12.6-cudnn9-devel
-apptainer build --disable-cache --sandbox romanian-lip-sandbox docker://pytorch/pytorch:2.7.0-cuda12.6-cudnn9-runtime
+
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/conda/bin:$PATH"
@@ -29,10 +29,12 @@ RUN mkdir -p /opt/conda/envs/venv/etc/conda/activate.d && \
 WORKDIR /app
 
 COPY ./models ./models
+COPY ./talknet ./talknet
 COPY ./requirements.txt ./
 COPY *.sh ./
 COPY *.txt ./
 COPY *.py ./
+COPY *.md ./
 
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
