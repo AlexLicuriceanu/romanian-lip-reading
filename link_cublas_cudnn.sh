@@ -1,2 +1,4 @@
 #!/bin/bash
+
+# must be sourced: source ./link_cublas_cudnn.sh
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:`python3 -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__file__) + ":" + os.path.dirname(nvidia.cudnn.lib.__file__))'`
