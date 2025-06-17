@@ -20,6 +20,7 @@ def asd_stage(trim_output_dir=TRIM_OUTPUT_DIR, asd_output_dir=ASD_OUTPUT_DIR):
 
     os.makedirs(asd_output_dir, exist_ok=True)
 
+
     # Recursively find all .json files in TRIM_OUTPUT_DIR
     trim_files = []
     for root, dirs, files in os.walk(trim_output_dir):

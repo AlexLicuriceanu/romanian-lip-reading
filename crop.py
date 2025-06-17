@@ -16,7 +16,10 @@ from pipeline_config import (
 )
 
 # Load ONNX model
-session = ort.InferenceSession(CROP_FACEMESH_ONNX_MODEL_PATH, providers=CROP_ONNX_PROVIDERS)
+sess_options = ort.SessionOptions()
+sess_options.intra_op_num_threads = os.cpu_count()
+sess_options.inter_op_num_threads = 1
+session = ort.InferenceSession(CROP_FACEMESH_ONNX_MODEL_PATH, sess_options=sess_options, providers=CROP_ONNX_PROVIDERS)
 input_name = session.get_inputs()[0].name
 output_names = [o.name for o in session.get_outputs()]
 
@@ -199,12 +202,25 @@ def crop_stage(asd_output_dir, crop_output_dir, output_minimum_size, model_input
             cropped_path = os.path.abspath(os.path.join(crop_output_dir, label.replace(" ", "_"), f"{segment_key}.mp4"))
 
             if crop_with_audio:
-                final_path = cropped_path.replace(".mp4", "_with_audio.mp4")
-                cmd = ["ffmpeg", "-y", "-i", cropped_path, "-i", segment_path,
-                       "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-shortest", final_path]
-                
-                subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                os.replace(final_path, cropped_path)
+                temp_path = cropped_path.replace(".mp4", "_with_audio.mp4")
+
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", cropped_path,
+                    "-i", segment_path,
+                    "-map", "0:v:0", "-map", "1:a:0",
+                    "-c:v", "copy", "-c:a", "aac",
+                    "-shortest", temp_path
+                ]
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                if result.returncode != 0:
+                    print(f"[CROP] Failed to merge audio for {cropped_path}")
+                    print(result.stderr)
+                elif os.path.exists(temp_path):
+                    os.replace(temp_path, cropped_path)
+                else:
+                    print(f"[CROP] ffmpeg did not produce expected output: {temp_path}")
 
 if __name__ == "__main__":
     crop_stage(

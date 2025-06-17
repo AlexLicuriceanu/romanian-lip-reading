@@ -33,6 +33,10 @@ def run_talknet_batch(clip_dir, save_dir, segments, max_workers, in_memory_thres
     full_paths = [os.path.join(clip_dir, f) for f in all_files]
 
     video_name = os.path.basename(clip_dir)
+    if os.path.exists(os.path.join(save_dir, video_name)):
+        print(f"Output directory {os.path.join(save_dir, video_name)} already exists, skipping processing.")
+        return
+    
     os.makedirs(save_dir, exist_ok=True)
     save_paths = [os.path.join(save_dir, video_name, os.path.splitext(os.path.basename(path))[0]) for path in full_paths]
 
